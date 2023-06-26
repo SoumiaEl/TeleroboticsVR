@@ -40,7 +40,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://franka_gazebo/meshes/visual/hand.dae"/>
+        <mesh filename="meshes/visual/hand.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -49,7 +49,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://franka_gazebo/meshes/collision/hand.stl"/>
+        <mesh filename="meshes/collision/hand.stl"/>
       </geometry>
     </collision>
   </link>
@@ -62,7 +62,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://franka_gazebo/meshes/visual/finger.dae"/>
+        <mesh filename="meshes/visual/finger.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -71,7 +71,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://franka_gazebo/meshes/collision/finger.stl"/>
+        <mesh filename="meshes/collision/finger.stl"/>
       </geometry>
     </collision>
   </link>
@@ -84,7 +84,7 @@
     <visual>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://franka_gazebo/meshes/visual/finger.dae"/>
+        <mesh filename="meshes/visual/finger.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -93,7 +93,7 @@
     <collision>
       <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://franka_gazebo/meshes/collision/finger.stl"/>
+        <mesh filename="meshes/collision/finger.stl"/>
       </geometry>
     </collision>
   </link>
@@ -112,4 +112,3 @@
     <limit effort="20" lower="-0.001" upper="0.04" velocity="0.3"/>
   </joint>
 </robot>
-

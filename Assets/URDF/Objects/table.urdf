@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<robot name="static_table">
+  <link name="static_table__link">
+    <inertial>
+      <mass value="1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+    <collision name="static_table__surface">
+      <origin xyz="1.12388 -0.14827  1" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.5 0.8 0.03"/>
+      </geometry>
+    </collision>
+    <collision name="static_table__front_left_leg">
+      <origin xyz="1.80388 0.23172 0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </collision>
+    <collision name="static_table__back_right_leg">
+      <origin xyz="0.44388 -0.52827  0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </collision>
+    <collision name="static_table__front_right_leg">
+      <origin xyz="1.80388 -0.52827  0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </collision>
+    <collision name="static_table__back_left_leg">
+      <origin xyz="0.44388 0.23172 0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </collision>
+    <visual name="static_table__visual1">
+      <origin xyz="1.12388 -0.14827  1" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.4 0.8 0.04"/>
+      </geometry>
+    </visual>
+    <visual name="static_table__front_left_leg">
+      <origin xyz="1.80388 0.23172 0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </visual>
+    <visual name="static_table__front_right_leg">
+      <origin xyz="1.80388 -0.52827  0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </visual>
+    <visual name="static_table__back_right_leg">
+      <origin xyz="0.44388 -0.52827  0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </visual>
+    <visual name="static_table__back_left_leg">
+      <origin xyz="0.44388 0.23172 0.5" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="1"/>
+      </geometry>
+    </visual>
+  </link>
+</robot>
