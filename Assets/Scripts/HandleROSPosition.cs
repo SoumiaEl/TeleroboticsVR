@@ -4,6 +4,8 @@ using UnityEngine;
 using RosMessageTypes.Geometry;
 using RosMessageTypes.Sensor;
 using Unity.Robotics.ROSTCPConnector;
+using Unity.Robotics.ROSTCPConnector.ROSGeometry;
+using Unity.Robotics.UrdfImporter;
 using RosMessageTypes.Std;
 
 
@@ -13,15 +15,31 @@ public class HandleROSPosition : MonoBehaviour
 {
     ROSConnection ros;
     // Drag the virtual hand object here in the Unity editor
-    public GameObject virtualHand;
-    public GameObject base_link;
-    public GameObject endEffector;
+    [SerializeField]
+    GameObject virtualHand;
+
+    [SerializeField]
+    GameObject base_link;
+
+    [SerializeField]
+    GameObject endEffector;
+
+    [SerializeField]
+    GameObject panda;
+
+    // Articulation Bodies
+    List <ArticulationBody> m_JointArticulationBodies;
+
+    public static readonly string[] LinkNames =
+        { "world/panda_link0/panda_link1", "/panda_link2", "/panda_link3", "/panda_link4", "/panda_link5", "/panda_link6", "/panda_link7" };
+
 
     private string robotNamespace = "franka";
     private string desired_ee_pose_topic;
     private string desired_joint_states_topic;
-    private List<ArticulationBody> robot_joints;
-    private int nb_robots_joints = 8;
+    private UrdfJointRevolute[] robot_joints;
+    private int nb_robots_joints = 7;
+    string[] linkNames;
 
 
 
@@ -34,29 +52,30 @@ public class HandleROSPosition : MonoBehaviour
         desired_ee_pose_topic = "ee_target_pose";
         desired_joint_states_topic = robotNamespace + "/desired_joint_state";
 
-        robot_joints = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>());
+        // Get UrdfJointRevolute components instead of ArticulationBody components
+        robot_joints = new UrdfJointRevolute[nb_robots_joints];
+        m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>());
 
-        Debug.Log(robot_joints.Count);
+        var linkName = string.Empty;
+        for (var i = 0; i < nb_robots_joints; i++)
+        {
+            linkName += LinkNames[i];
+            robot_joints[i] = panda.transform.Find(linkName).GetComponent<UrdfJointRevolute>();
+      
+        }
 
         ros.RegisterPublisher<JointStateMsg>(robotNamespace + "/current_joint_states");
         ros.RegisterPublisher<PoseStampedMsg>("ee_target_pose");
 
         // Invoke these methods after a delay of 1 second.
-        Invoke("CurrentJointState", 1);
-        Invoke("SendTargetPose", 1);
-
-        Vector3 rosPosition = ConvertUnityToRosPositionCoordinate(virtualHand.transform.position);
-        Quaternion rosOrientation = ConvertUnityToRosOrientationCoordinate(virtualHand.transform.rotation);
-
-        Debug.Log("Initial Position in ROS coordinates: " + rosPosition);
-        Debug.Log("Initial Orientation in ROS coordinates: " + rosOrientation);
+        Invoke("CurrentJointState", 0.5f);
+        Invoke("SendTargetPose", 0.5f);
 
 
     }
 
     void CurrentJointState()
     {
-
         // Publish initial joint states
 
         var jointStateMsg = new JointStateMsg
@@ -69,24 +88,17 @@ public class HandleROSPosition : MonoBehaviour
 
         jointStateMsg.header.frame_id = "panda_link0";
 
-
         for (int i = 0; i < nb_robots_joints; i++)
         {
+           
+            jointStateMsg.name[i] = LinkNames[i];
 
-            jointStateMsg.name[i] = robot_joints[i].name;
-            jointStateMsg.velocity[i] = robot_joints[i].velocity[0];
+            // Get velocity and position from UrdfJointRevolute component
+            jointStateMsg.velocity[i] = robot_joints[i].GetVelocity();
+            jointStateMsg.position[i] = robot_joints[i].GetPosition();
 
-            //jointStateMsg.effort[i] = effort_for_joint[i];      // If you can get joint efforts
-
-            if (robot_joints[i].jointType == ArticulationJointType.FixedJoint)
-            {
-                jointStateMsg.position[i] = 0;
-            }
-            else
-            {
-                jointStateMsg.position[i] = robot_joints[i].jointPosition[0];
-            }
             Debug.Log("Position du Joint" + i + ":" + jointStateMsg.position[i]);
+
 
         }
 
@@ -95,56 +107,33 @@ public class HandleROSPosition : MonoBehaviour
 
         Debug.Log("Test Position de l'effecteur :" + endEffector.transform.position);
         Debug.Log("Test Rotation de l'effecteur :" + endEffector.transform.rotation);
-
     }
+
 
     void SendTargetPose()
     {
 
-      
-        // Obtenir la position et l'orientation de la main virtuelle
-        Vector3 unityPosition = endEffector.transform.InverseTransformPoint(virtualHand.transform.position);
-        Quaternion unityOrientation = Quaternion.Inverse(endEffector.transform.rotation) * virtualHand.transform.rotation;
-
-        Quaternion rosOrientation = ConvertUnityToRosOrientationCoordinate(unityOrientation);
-        Vector3 rosPosition = ConvertUnityToRosPositionCoordinate(unityPosition);
-
-        // Convertir les coordonnées de Unity en coordonnées ROS
-        //rosPosition = ConvertUnityToRosPositionCoordinate(rosPosition);
-        //rosOrientation = ConvertUnityToRosOrientationCoordinate(rosOrientation);
-
-
-        // Créer un QuaternionMsg à partir de l'orientation ROS normalisée
-        QuaternionMsg normalizedQuaternionMsg = new QuaternionMsg
-        {
-            x = rosOrientation.x,
-            y = rosOrientation.y,
-            z = rosOrientation.z,
-            w = rosOrientation.w
-        };
 
         // Créer un PoseMsg avec la position et l'orientation ROS
         var poseMsg = new PoseMsg
         {
-            position = new PointMsg
-            {
-                x = rosPosition.x,
-                y = rosPosition.y,
-                z = rosPosition.z
-            },
-            orientation = normalizedQuaternionMsg
+            position = virtualHand.transform.position.To<FLU>(),
+
+            orientation = virtualHand.transform.rotation.To<FLU>()
         };
 
         // Créer un PoseStampedMsg et le publier
         var poseStampedMsg = new PoseStampedMsg
         {
-            header = new HeaderMsg { frame_id = "panda_link0" },
+            header = new HeaderMsg { frame_id = "panda_link7" },
             pose = poseMsg
         };
 
         Debug.Log("Position souhaitée : " + poseStampedMsg);
 
         ros.Publish(desired_ee_pose_topic, poseStampedMsg);
+
+        Debug.Log("La target est publiée ?");
     }
 
 
@@ -158,48 +147,32 @@ public class HandleROSPosition : MonoBehaviour
             return;
         }
 
-        // Mettez à jour les positions cibles pour chaque joint
-        for (int i = 1; i < nb_robots_joints; i++)
+
+        // Set the joint values for every joint
+        for (var joint = 0; joint < nb_robots_joints  ; joint++)
         {
-            var drive = robot_joints[i].xDrive;
-            drive.target = (float)msg.position[i];
-            robot_joints[i].xDrive = drive;
+            var joint1XDrive = m_JointArticulationBodies[joint].xDrive;
+            joint1XDrive.target = -(float)msg.position[joint] * Mathf.Rad2Deg;
+            m_JointArticulationBodies[joint].xDrive = joint1XDrive;
+
+            Debug.Log("Voici la position du Joint i = " + joint + "position = " + joint1XDrive.target);
         }
-    }
 
-    Vector3 ConvertUnityToRosPositionCoordinate(Vector3 unityPosition)
-    {
-        return new Vector3(-unityPosition.z, -unityPosition.x, unityPosition.y);
-    }
-
-
-    Quaternion ConvertUnityToRosOrientationCoordinate(Quaternion unityQuaternion)
-    {
-        return new Quaternion(unityQuaternion.y, unityQuaternion.z, -unityQuaternion.x, -unityQuaternion.w);
     }
 
 
     // Update is called once per frame
     void Update()
     {
+
         // Subscribe to joint states
         ros.Subscribe<JointStateMsg>(desired_joint_states_topic, HandleDesiredJointStateMessage);
-        Debug.Log("Position de l'end effecteur:" + endEffector.transform.position);
+        // Votre code existant ici...
+        Debug.Log("Position de l'effecteur de fin :" + endEffector.transform.position);
+        Debug.Log("Orientation de l'effecteur de fin :" + endEffector.transform.rotation);
 
     }
 }
 
 
-/*
- Position 
-x : 0.156
-y: -0.263
-z : 0.29
 
-Rotation 
-x: 0.00027
-y : 0.00079,
-z  -1.00000 
-w : 0.00000
-
- */
