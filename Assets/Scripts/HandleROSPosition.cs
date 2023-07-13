@@ -33,6 +33,9 @@ public class HandleROSPosition : MonoBehaviour
     public static readonly string[] LinkNames =
         { "world/panda_link0/panda_link1", "/panda_link2", "/panda_link3", "/panda_link4", "/panda_link5", "/panda_link6", "/panda_link7" };
 
+    public static readonly string[] RosLinkNames =
+    { "panda_link1", "panda_link2", "panda_link3", "panda_link4", "panda_link5", "panda_link6", "panda_link7" };
+
 
     private string robotNamespace = "franka";
     private string desired_ee_pose_topic;
@@ -54,7 +57,7 @@ public class HandleROSPosition : MonoBehaviour
 
         // Get UrdfJointRevolute components instead of ArticulationBody components
         robot_joints = new UrdfJointRevolute[nb_robots_joints];
-        m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>());
+        m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>()); // maybe the problem is here 
 
         var linkName = string.Empty;
         for (var i = 0; i < nb_robots_joints; i++)
@@ -66,9 +69,10 @@ public class HandleROSPosition : MonoBehaviour
 
         ros.RegisterPublisher<JointStateMsg>(robotNamespace + "/current_joint_states");
         ros.RegisterPublisher<PoseStampedMsg>("ee_target_pose");
-
+        Debug.Log("Je trouve les informations de mes joints ? ");
         // Invoke these methods after a delay of 1 second.
         Invoke("CurrentJointState", 0.5f);
+        Debug.Log("Je trouve les informations de mes joints current ? ");
         Invoke("SendTargetPose", 0.5f);
 
 
@@ -91,7 +95,7 @@ public class HandleROSPosition : MonoBehaviour
         for (int i = 0; i < nb_robots_joints; i++)
         {
            
-            jointStateMsg.name[i] = LinkNames[i];
+            jointStateMsg.name[i] = RosLinkNames[i];
 
             // Get velocity and position from UrdfJointRevolute component
             jointStateMsg.velocity[i] = robot_joints[i].GetVelocity();
@@ -125,7 +129,7 @@ public class HandleROSPosition : MonoBehaviour
         // Créer un PoseStampedMsg et le publier
         var poseStampedMsg = new PoseStampedMsg
         {
-            header = new HeaderMsg { frame_id = "panda_link7" },
+            header = new HeaderMsg { frame_id = "panda_link0" },
             pose = poseMsg
         };
 
@@ -149,13 +153,14 @@ public class HandleROSPosition : MonoBehaviour
 
 
         // Set the joint values for every joint
-        for (var joint = 0; joint < nb_robots_joints  ; joint++)
-        {
-            var joint1XDrive = m_JointArticulationBodies[joint].xDrive;
-            joint1XDrive.target = -(float)msg.position[joint] * Mathf.Rad2Deg;
-            m_JointArticulationBodies[joint].xDrive = joint1XDrive;
+        for (var joint = 1; joint < nb_robots_joints + 1 ; joint++)
+        {   
 
-            Debug.Log("Voici la position du Joint i = " + joint + "position = " + joint1XDrive.target);
+            var joint1XDrive = m_JointArticulationBodies[joint].xDrive;
+            joint1XDrive.target = (float)msg.position[joint - 1] * Mathf.Rad2Deg;
+            m_JointArticulationBodies[joint].xDrive = joint1XDrive ;
+            Debug.Log("Joint name: " + m_JointArticulationBodies[joint].name + "angle :" + joint1XDrive.target);
+
         }
 
     }
