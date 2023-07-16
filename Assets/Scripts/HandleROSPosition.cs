@@ -24,14 +24,11 @@ public class HandleROSPosition : MonoBehaviour
     [SerializeField]
     GameObject endEffector;
 
-    [SerializeField]
-    GameObject panda;
-
     // Articulation Bodies
     List <ArticulationBody> m_JointArticulationBodies;
 
     public static readonly string[] LinkNames =
-        { "world/panda_link0/panda_link1", "/panda_link2", "/panda_link3", "/panda_link4", "/panda_link5", "/panda_link6", "/panda_link7" };
+        { "world/panda_link0/panda_link1", "world/panda_link0/panda_link1/panda_link2", "world/panda_link0/panda_link1/panda_link2/panda_link3", "world/panda_link0/panda_link1/panda_link2/panda_link3/panda_link4", "world/panda_link0/panda_link1/panda_link2/panda_link3/panda_link4/panda_link5", "world/panda_link0/panda_link1/panda_link2/panda_link3/panda_link4/panda_link5/panda_link6", "world/panda_link0/panda_link1/panda_link2/panda_link3/panda_link4/panda_link5/panda_link6/panda_link7" };
 
     public static readonly string[] RosLinkNames =
     { "panda_link1", "panda_link2", "panda_link3", "panda_link4", "panda_link5", "panda_link6", "panda_link7" };
@@ -42,7 +39,7 @@ public class HandleROSPosition : MonoBehaviour
     private string desired_joint_states_topic;
     private UrdfJointRevolute[] robot_joints;
     private int nb_robots_joints = 7;
-    string[] linkNames;
+  
 
 
 
@@ -57,19 +54,56 @@ public class HandleROSPosition : MonoBehaviour
 
         // Get UrdfJointRevolute components instead of ArticulationBody components
         robot_joints = new UrdfJointRevolute[nb_robots_joints];
+
+        foreach (UrdfJointRevolute joint in robot_joints)
+        {
+            if (joint != null)
+            {
+                Debug.Log("Joint name: " + joint.name);
+                Debug.Log("Joint position: " + joint.transform.position);
+                Debug.Log("Joint rotation: " + joint.transform.rotation);
+                // ... and so on for other properties you're interested in
+            }
+            else
+            {
+                Debug.Log("Joint is null!");
+            }
+        }
+
         m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>()); // maybe the problem is here 
 
-        var linkName = string.Empty;
         for (var i = 0; i < nb_robots_joints; i++)
         {
-            linkName += LinkNames[i];
-            robot_joints[i] = panda.transform.Find(linkName).GetComponent<UrdfJointRevolute>();
-      
+            Debug.Log("Test iteration : " + i);
+            // Find the joint by its name and add it to the array at the corresponding index
+            m_JointArticulationBodies[i] = this.gameObject.transform.Find(LinkNames[i]).GetComponent<ArticulationBody>();
+            robot_joints[i] = this.gameObject.transform.Find(LinkNames[i]).GetComponent<UrdfJointRevolute>();
         }
 
         ros.RegisterPublisher<JointStateMsg>(robotNamespace + "/current_joint_states");
         ros.RegisterPublisher<PoseStampedMsg>("ee_target_pose");
-        Debug.Log("Je trouve les informations de mes joints ? ");
+      
+
+        // Initialize joint positions
+        float[] initialJointPositions = { 0.0f, -0.7f, 0.0f, -1.8f, 0.0f, 1.1f, 0.0f };
+
+        // Ensure that the array of initial joint positions is the correct size
+        if (initialJointPositions.Length != nb_robots_joints)
+        {
+            Debug.LogError("Array of initial joint positions has incorrect size");
+            return;
+        }
+
+        // Update the target positions for each joint
+        for (int i = 0; i < nb_robots_joints; i++)
+        {
+            var drive = m_JointArticulationBodies[i].xDrive;
+            drive.target = initialJointPositions[i] * Mathf.Rad2Deg; // Convert to degrees as Unity uses degrees for rotation
+            m_JointArticulationBodies[i].xDrive = drive; // Set the target rotation for the joint
+
+        }
+
+
         // Invoke these methods after a delay of 1 second.
         Invoke("CurrentJointState", 0.5f);
         Debug.Log("Je trouve les informations de mes joints current ? ");
@@ -153,11 +187,11 @@ public class HandleROSPosition : MonoBehaviour
 
 
         // Set the joint values for every joint
-        for (var joint = 1; joint < nb_robots_joints + 1 ; joint++)
+        for (var joint = 0; joint < nb_robots_joints ; joint++)
         {   
 
             var joint1XDrive = m_JointArticulationBodies[joint].xDrive;
-            joint1XDrive.target = (float)msg.position[joint - 1] * Mathf.Rad2Deg;
+            joint1XDrive.target = (float)msg.position[joint] * Mathf.Rad2Deg;
             m_JointArticulationBodies[joint].xDrive = joint1XDrive ;
             Debug.Log("Joint name: " + m_JointArticulationBodies[joint].name + "angle :" + joint1XDrive.target);
 

@@ -50,6 +50,7 @@ public:
     {
 
         target_ee_pose_ = *msg; // Target End-effector Pose.
+        std::cout << "Je suis target_ee_pose :" << target_ee_pose_ << std::endl;
 
         if (!JointStateGet_)
             return;
@@ -60,19 +61,21 @@ public:
         // jointstate's [0],[1] data is finger joints, and we don't need it
         for (unsigned int i = 0; i < 7; i++)
         {
-            current_joint_state.name.push_back(current_jointstate_.name[i + 2]);
-            current_joint_state.position.push_back(current_jointstate_.position[i + 2]);
-            current_joint_state.velocity.push_back(current_jointstate_.velocity[i + 2]);
-            current_joint_state.effort.push_back(current_jointstate_.effort[i + 2]);
+            current_joint_state.name.push_back(current_jointstate_.name[i]);
+            current_joint_state.position.push_back(current_jointstate_.position[i]);
+            current_joint_state.velocity.push_back(current_jointstate_.velocity[i]);
+            current_joint_state.effort.push_back(current_jointstate_.effort[i]);
         }
-        
+
+        std::cout << current_joint_state << std::endl;
         // Get Current joint angle q_current by current_joint_state
         KDL::JntArray q_current;
         JointStateMsgToKDLJntArray(current_joint_state, q_current);
+        std::cout << "Je suis current_joint_state : " << current_joint_state << std::endl;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         sensor_msgs::JointState desired_joint_state; // Put your desired joint values to this variable.
-
+        
         //--- Implement your code here ---//  implement inverse kinematics by using included functions in this c++ class
         // "KDL::Chain franka_chain" is already figured out in 'init' function
 
@@ -82,19 +85,19 @@ public:
         
 
         PoseStampedMsgToKDLFrame(target_ee_pose_, target_frame);
-        std::cout<<target_ee_pose_<<std::endl;
-        std::cout<<target_frame<<std::endl;
-        
+        //std::cout<<"target_ee_pose : " << target_ee_pose_<<std::endl;
+        std::cout << "target_frame : " << target_frame<<std::endl;
 
-        // Compute target JointArray q_target
-        KDL::JntArray q_target(q_current.rows());
+            // Compute target JointArray q_target
+            KDL::JntArray q_target(q_current.rows());
         int IK_Result = KDLInverseKinematics(franka_chain_, target_frame, q_current, q_target);
         if (IK_Result != 0)
         {
             std::cout << "Inverse Kinematics not Solved : " << IK_Result << std::endl;
+            std::cout << "L'erreur vient d'ici ?" << std::endl;
             return;
         }
-
+        
         // Convert JointArray to JointStateMsg
         KDLJntArrayToJointStateMsg(q_target, desired_joint_state);
 
@@ -102,23 +105,25 @@ public:
 
         // Publish final joint state.
         sensor_msgs::JointState final_joint_state; // Including finger joints
-
+        std::cout << "desired_joint_state : " << desired_joint_state << std::endl;
         final_joint_state = current_jointstate_;
 
         // Updating desired joint positions
         for (unsigned int i = 0; i < 7; i++)
         {
-            final_joint_state.name[i + 2] = desired_joint_state.name[i];
-            final_joint_state.position[i + 2] = desired_joint_state.position[i];
-            final_joint_state.velocity[i + 2] = desired_joint_state.velocity[i];
-            final_joint_state.effort[i + 2] = desired_joint_state.effort[i];
+            final_joint_state.name[i] = desired_joint_state.name[i];
+            final_joint_state.position[i] = desired_joint_state.position[i];
+            final_joint_state.velocity[i] = desired_joint_state.velocity[i];
+            final_joint_state.effort[i] = desired_joint_state.effort[i];
         }
 
         final_joint_state.header.stamp = ros::Time::now();
         desired_joint_state_pub_.publish(final_joint_state);
+        std::cout << "final_joint_state : " << final_joint_state << std::endl;
 
         // Forward Kinematics To check the result
         geometry_msgs::PoseStamped updated_ee_pose;
+        
         KDL::JntArray q_now;
 
         JointStateMsgToKDLJntArray(desired_joint_state, q_now);
@@ -129,7 +134,9 @@ public:
         updated_ee_pose.header.frame_id = "panda_link0";
         updated_ee_pose.header.stamp = msg->header.stamp;
 
+        std::cout << "updated ee pose target : " << updated_ee_pose << std::endl;
         updated_ee_pose_pub_.publish(updated_ee_pose);
+        
     }
 
     // You can use 'franka_chain_' variable as input for 'robot_chain'.
@@ -169,13 +176,21 @@ public:
         // Creation of the solvers
         KDL::ChainFkSolverPos_recursive fksolver(franka_chain_);                                                        // Forward position solver
         KDL::ChainIkSolverVel_pinv iksolver_vel(franka_chain_);                                                         // Inverse velocity solver
-        KDL::ChainIkSolverPos_NR_JL iksolver_pos_nr_jl(franka_chain_, q_min, q_max, fksolver, iksolver_vel, 200, 1e-3); // Maximum 100 iterations, stop at accuracy 1e-3
+        KDL::ChainIkSolverPos_NR_JL iksolver_pos_nr_jl(franka_chain_, q_min, q_max, fksolver, iksolver_vel, 400, 1e-3); // Maximum 100 iterations, stop at accuracy 1e-3
+
+        for (unsigned int i = 0; i < q_current.rows(); i++)
+        {
+            std::cout << "q_current(" << i << "): " << q_current(i) << std::endl;
+        }
+        
 
         // Solving IK
         int ik_result = iksolver_pos_nr_jl.CartToJnt(q_current, target_frame, q_out);
+        std::cout << "ik_result: " << ik_result << std::endl;
+    
         return ik_result;
     }
-    // hihi
+    
     void KDLFrameToPoseStampedMsg(const KDL::Frame kdl_frame_in, geometry_msgs::PoseStamped &pose_stamped_out)
     {
         pose_stamped_out.pose.position.x = kdl_frame_in.p.x();
@@ -261,12 +276,13 @@ public:
         franka_jointstate_sub_ = node_->subscribe(robot_name_space_ + "/current_joint_states", 10, &FrankaKinematicsSolver::CurrentJointStateCallback, this);
 
         JointStateGet_ = false;
-       
+        
+
         // Get KDL_tree information from ROS parameter server
         KDL::Tree franka_kdl_tree;
         std::string robot_desc_string;
         node_->param("robot_description", robot_desc_string, std::string());
-        
+
 
         if (!kdl_parser::treeFromString(robot_desc_string, franka_kdl_tree))
         {
@@ -284,8 +300,10 @@ public:
         ROS_INFO("Number of joints: %d\n", num_joints);
 
         // // Chain Creation
-        bool ret0 = franka_kdl_tree.getChain("panda_link0", "panda_hand", franka_chain_);
+        bool ret0 = franka_kdl_tree.getChain("panda_link0", "panda_link8", franka_chain_);
         ROS_INFO("GetChain Result: %d", ret0);
+
+        
 
         return 0;
     }
@@ -305,7 +323,6 @@ int main(int argc, char **argv)
     }
     ROS_INFO("TEST");
     franka_kinematics.publish();
-    ROS_INFO("TEST2");
 
     return 0;
 }

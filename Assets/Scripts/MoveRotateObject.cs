@@ -44,6 +44,7 @@ public class MoveRotateObject : MonoBehaviour
 
     void Update()
     {
+       
         // Rotate the object as long as the mouse wheel is clicked
         if (rotating)
         {
@@ -53,5 +54,13 @@ public class MoveRotateObject : MonoBehaviour
             transform.Rotate(Vector3.up, -rotX);
             transform.Rotate(Vector3.right, rotY);
         }
+
+        if (Input.GetMouseButton(0)) // Si le clic gauche est enfoncé
+        {
+            float movX = Input.GetAxis("Mouse X") * moveSpeed;
+            float movY = Input.GetAxis("Mouse Y") * moveSpeed;
+            transform.Translate(-Vector3.right * movX - Vector3.up * movY);
+        }
+
     }
 }
