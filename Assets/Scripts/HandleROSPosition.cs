@@ -39,7 +39,10 @@ public class HandleROSPosition : MonoBehaviour
     private string desired_joint_states_topic;
     private UrdfJointRevolute[] robot_joints;
     private int nb_robots_joints = 7;
-  
+    private float distanceThreshold = 0.05f;
+    // Add this at the class level
+    private JointStateMsg lastJointStateMsg = null;
+
 
 
 
@@ -55,20 +58,7 @@ public class HandleROSPosition : MonoBehaviour
         // Get UrdfJointRevolute components instead of ArticulationBody components
         robot_joints = new UrdfJointRevolute[nb_robots_joints];
 
-        foreach (UrdfJointRevolute joint in robot_joints)
-        {
-            if (joint != null)
-            {
-                Debug.Log("Joint name: " + joint.name);
-                Debug.Log("Joint position: " + joint.transform.position);
-                Debug.Log("Joint rotation: " + joint.transform.rotation);
-                // ... and so on for other properties you're interested in
-            }
-            else
-            {
-                Debug.Log("Joint is null!");
-            }
-        }
+        
 
         m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>()); // maybe the problem is here 
 
@@ -103,14 +93,30 @@ public class HandleROSPosition : MonoBehaviour
 
         }
 
+        foreach (UrdfJointRevolute joint in robot_joints)
+        {
+            if (joint != null)
+            {
+                Debug.Log("Joint name: " + joint.name);
+                Debug.Log("Joint position: " + joint.transform.position);
+                Debug.Log("Joint rotation: " + joint.transform.rotation);
+                // ... and so on for other properties you're interested in
+            }
+            else
+            {
+                Debug.Log("Joint is null!");
+            }
+        }
+
 
         // Invoke these methods after a delay of 1 second.
         Invoke("CurrentJointState", 0.5f);
         Debug.Log("Je trouve les informations de mes joints current ? ");
         Invoke("SendTargetPose", 0.5f);
 
-
-    }
+        ros.Subscribe<JointStateMsg>(desired_joint_states_topic, HandleDesiredJointStateMessage);
+    
+}
 
     void CurrentJointState()
     {
@@ -177,11 +183,23 @@ public class HandleROSPosition : MonoBehaviour
 
     void HandleDesiredJointStateMessage(JointStateMsg msg)
     {
+
+        // Update the last joint state message
+        lastJointStateMsg = msg;
+
         Debug.Log("Voici le message reçu sous ROS:" + msg);
+
+        // Check that the message itself is not null
+        if (msg == null)
+        {
+            Debug.Log("Received null JointStateMsg");
+            return;
+        }
+
         // Vérifiez que le message a le bon nombre de positions
         if (msg.position.Length != nb_robots_joints)
         {
-            Debug.LogError("Received JointStateMsg with incorrect number of positions");
+            Debug.Log("Received JointStateMsg with incorrect number of positions");
             return;
         }
 
@@ -204,11 +222,24 @@ public class HandleROSPosition : MonoBehaviour
     void Update()
     {
 
-        // Subscribe to joint states
-        ros.Subscribe<JointStateMsg>(desired_joint_states_topic, HandleDesiredJointStateMessage);
-        // Votre code existant ici...
-        Debug.Log("Position de l'effecteur de fin :" + endEffector.transform.position);
-        Debug.Log("Orientation de l'effecteur de fin :" + endEffector.transform.rotation);
+        // Get the position of the virtual hand and the robot
+        Vector3 handPosition = virtualHand.transform.position;
+        Vector3 robotPosition = endEffector.transform.position;
+
+        // Calculate the distance between the hand and the robot
+        float distance = Vector3.Distance(handPosition, robotPosition);
+
+        // If the distance is greater than the threshold, update the robot joint positions
+        if (distance > distanceThreshold)
+        {
+
+            Invoke("CurrentJointState", 0.0f);
+            Invoke("SendTargetPose", 0.5f);
+
+            // Handle the most recent joint state message
+            HandleDesiredJointStateMessage(lastJointStateMsg);
+
+        }
 
     }
 }
