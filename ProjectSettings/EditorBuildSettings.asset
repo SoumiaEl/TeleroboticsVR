@@ -6,5 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes: []
   m_configObjects:
+    com.htc.upm.wave.xrsdk.xrsettings: {fileID: 11400000, guid: 1c399479067450540a2f6060d5226df5, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 1c750880139504242a8af3f7542160f9, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 44d7b6d0d03c88f4f95484ce96bf197b, type: 2}
+    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: 31b46961a2a2d4a41899f6170f194088, type: 2}

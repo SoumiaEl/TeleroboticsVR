@@ -7,9 +7,7 @@ using Unity.Robotics.ROSTCPConnector;
 using Unity.Robotics.ROSTCPConnector.ROSGeometry;
 using Unity.Robotics.UrdfImporter;
 using RosMessageTypes.Std;
-
-
-
+using RosMessageTypes.TeleoperationVr;
 
 public class HandleROSPosition : MonoBehaviour
 {
@@ -39,10 +37,17 @@ public class HandleROSPosition : MonoBehaviour
     private string desired_joint_states_topic;
     private UrdfJointRevolute[] robot_joints;
     private int nb_robots_joints = 7;
-    private float distanceThreshold = 0.05f;
+    private float distanceThreshold = 0.0005f;
     // Add this at the class level
     private JointStateMsg lastJointStateMsg = null;
 
+    //For message
+
+    private string positionTopicHand = "unity_position_user"; // Nom du topic où nous allons publier
+    private string positionTopicEndEffector = "unity_position_effector"; // Nom du topic où nous allons publier
+    private double previousTime;
+    private Vector3 previousPositionHand;
+    private Vector3 previousPositionEndEffector;
 
 
 
@@ -51,6 +56,10 @@ public class HandleROSPosition : MonoBehaviour
     {
 
         ros = ROSConnection.GetOrCreateInstance();
+        previousTime = Time.time;
+        previousPositionHand = virtualHand.transform.position;
+        previousPositionEndEffector = endEffector.transform.position;
+
 
         desired_ee_pose_topic = "ee_target_pose";
         desired_joint_states_topic = robotNamespace + "/desired_joint_state";
@@ -60,7 +69,7 @@ public class HandleROSPosition : MonoBehaviour
 
         
 
-        m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>()); // maybe the problem is here 
+        m_JointArticulationBodies = new List<ArticulationBody>(GetComponentsInChildren<ArticulationBody>()); 
 
         for (var i = 0; i < nb_robots_joints; i++)
         {
@@ -70,8 +79,12 @@ public class HandleROSPosition : MonoBehaviour
             robot_joints[i] = this.gameObject.transform.Find(LinkNames[i]).GetComponent<UrdfJointRevolute>();
         }
 
+
+        ros.RegisterPublisher<ObjectDataMsg>(positionTopicHand);
+        ros.RegisterPublisher<ObjectDataMsg>(positionTopicEndEffector);
         ros.RegisterPublisher<JointStateMsg>(robotNamespace + "/current_joint_states");
         ros.RegisterPublisher<PoseStampedMsg>("ee_target_pose");
+        ros.RegisterPublisher<TwistMsg>("ee_target_velocity");
       
 
         // Initialize joint positions
@@ -109,7 +122,7 @@ public class HandleROSPosition : MonoBehaviour
         }
 
 
-        // Invoke these methods after a delay of 1 second.
+        // Invoke these methods after a delay of 0.5 second.
         Invoke("CurrentJointState", 0.5f);
         Debug.Log("Je trouve les informations de mes joints current ? ");
         Invoke("SendTargetPose", 0.5f);
@@ -222,9 +235,52 @@ public class HandleROSPosition : MonoBehaviour
     void Update()
     {
 
+        double currentTime = Time.time;
+        double deltaTime = currentTime - previousTime;
+        float deltaTimeFloat = (float)deltaTime;
+
         // Get the position of the virtual hand and the robot
         Vector3 handPosition = virtualHand.transform.position;
         Vector3 robotPosition = endEffector.transform.position;
+
+        Vector3 velocityHand = new Vector3(
+            (handPosition.x - previousPositionHand.x) / deltaTimeFloat,
+            (handPosition.y - previousPositionHand.y) / deltaTimeFloat,
+            (handPosition.z - previousPositionHand.z) / deltaTimeFloat
+        );
+
+        Vector3 velocityEndEffector = new Vector3(
+            (robotPosition.x - previousPositionEndEffector.x) / deltaTimeFloat,
+            (robotPosition.y - previousPositionEndEffector.y) / deltaTimeFloat,
+            (robotPosition.z - previousPositionEndEffector.z) / deltaTimeFloat
+        );
+
+        // Publier les données pour la main virtuelle
+        var handMessage = new ObjectDataMsg
+        {
+            object_name = "target",
+            timestamp = currentTime,
+            position = handPosition.To<FLU>(),
+            velocity = velocityHand.To<FLU>() // Convertir en coordonnées ROS (FLU)
+        };
+        ros.Publish(positionTopicHand, handMessage);
+
+        // Publier les données pour l'effecteur final
+        var endEffectorMessage = new ObjectDataMsg
+        {
+            object_name = "end_effector",
+            timestamp = currentTime,
+            position = robotPosition.To<FLU>(),
+            velocity = velocityEndEffector.To<FLU>() // Convertir en coordonnées ROS (FLU)
+        };
+        ros.Publish(positionTopicEndEffector, endEffectorMessage);
+
+        // Mettre à jour les valeurs précédentes pour le prochain calcul
+        previousTime = currentTime;
+        previousPositionHand = handPosition;
+        previousPositionEndEffector = robotPosition;
+
+
 
         // Calculate the distance between the hand and the robot
         float distance = Vector3.Distance(handPosition, robotPosition);
