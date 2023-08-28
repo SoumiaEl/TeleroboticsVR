@@ -50,7 +50,7 @@ public:
     {
 
         target_ee_pose_ = *msg; // Target End-effector Pose.
-        std::cout << "Je suis target_ee_pose :" << target_ee_pose_ << std::endl;
+       
 
         if (!JointStateGet_)
             return;
@@ -71,7 +71,7 @@ public:
         // Get Current joint angle q_current by current_joint_state
         KDL::JntArray q_current;
         JointStateMsgToKDLJntArray(current_joint_state, q_current);
-        std::cout << "Je suis current_joint_state : " << current_joint_state << std::endl;
+      
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         sensor_msgs::JointState desired_joint_state; // Put your desired joint values to this variable.
@@ -94,7 +94,7 @@ public:
         if (IK_Result != 0)
         {
             std::cout << "Inverse Kinematics not Solved : " << IK_Result << std::endl;
-            std::cout << "L'erreur vient d'ici ?" << std::endl;
+           
             return;
         }
         
@@ -139,7 +139,6 @@ public:
         
     }
 
-    // You can use 'franka_chain_' variable as input for 'robot_chain'.
     // 'franka_chain_' variable is already figured out in the 'init' function.
     int KDLForwardKinematics(const KDL::Chain robot_chain, const KDL::JntArray joint_in, KDL::Frame &cart_pos_out)
     {
