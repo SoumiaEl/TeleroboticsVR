@@ -26,7 +26,7 @@ This repo will offer solutions to the latency issue by introducing a ROS-Unity s
 
 To achieve the seamless integration of Virtual Reality (VR) or Augmented Reality (AR) with remote robot control, a connection between Unity and the Robot Operating System (ROS) will be set up. This section will guide you through the essential steps to establish a reliable ROS-Unity link by using Unity Robotics Hub packages. The remote robot control used in this project is the Franka Emika Panda. 
 
-### [Step 1](Tutorials/Step1.md)
+### [Step 1 : Unity Setup](Tutorials/Step1.md)
 
 
 
