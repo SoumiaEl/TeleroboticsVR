@@ -1,4 +1,4 @@
-# TeleroboticsVR
+# VR/AR for Telerobotics
 ![ROS](https://img.shields.io/badge/ros-noetic-brightgreen)
 ![Unity](https://img.shields.io/badge/unity-2022.3.2+-brightgreen)
 
