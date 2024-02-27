@@ -48,5 +48,5 @@ rosparam set ROS_IP <your IP address>
 rosrun ros_tcp_endpoint default_server_endpoint.py
 ```
 
-Finally, return to Unity and navigate to `Robotics > ROS Settings`. Replace the default "ROS IP Address" in the field with your own IP address. Make sure the protocol is set to "ROS1".
+Return to Unity and navigate to `Robotics > ROS Settings`. Replace the default "ROS IP Address" in the field with your own IP address. Make sure the protocol is set to "ROS1".
 
