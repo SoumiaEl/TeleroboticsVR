@@ -19,6 +19,8 @@ Portions of this project incorporate components from the Unity Robotics Hub, whi
 
 Telepresence, especially through the use of Virtual Reality (VR) and Augmented Reality (AR), represents a significant shift in the field of remote robot control. This modality has shown itself to be highly intuitive and effective, enabling a kind of telepresence that can be beneficial in various contexts, such as potentially hazardous environments for humans, enhancing teamwork, and manipulating remote objects with the help of robots.
 
+This repo will offer solutions to the latency issue by introducing a ROS-Unity simulation of a real teleoperation scenario. The objective is to explore new perspectives, evaluate potential methods, and acquaint oneself with emerging technologies that could potentially improve the quality of VR/AR telepresence.
+
 
 
 
