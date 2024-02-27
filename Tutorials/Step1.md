@@ -30,9 +30,9 @@ catkin_make
 #### Setting Up the IP Address:
 
 Start the ROS core by running:
-
 ```bash
-~/catkin_ws$ roscore
+cd ~/catkin_ws
+ roscore
 ```
 
 Once the ROS Core is launched, it will display `started core service [/rosout]` in the terminal. Open another terminal and run the following command to retrieve your own IP address:
