@@ -7,7 +7,7 @@
 
 ## Acknowledgements
 
-This project makes use of components from the [Unity Robotics Hub](https://github.com/Unity-Technologies/Unity-Robotics-Hub), which is an open-source project provided by Unity Technologies. The Unity Robotics Hub is licensed under the Apache License 2.0. We are thankful to Unity Technologies and the contributors of the Unity Robotics Hub for their work and for making it publicly available.
+This project makes use of components from the [Unity Robotics Hub](https://github.com/Unity-Technologies/Unity-Robotics-Hub), which is an open-source project provided by Unity Technologies. The Unity Robotics Hub is licensed under the Apache License 2.0. 
 
 ## License
 
