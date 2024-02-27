@@ -2,7 +2,7 @@
 
 In this step, we will explain how to install the ROS TCP Connector package, enabling the connection between ROS and your Unity project.
 
-### <img src="images/unity-tab-square-white.png" alt="ros2" width="24" height="24"/> Unity Setup
+### <img src="images/unity-tab-square-white.png" alt="unity" width="24" height="24"/> Unity Setup
 
 First, you need to add the ROS TCP Connector package to Unity by following the installation instructions provided in the link below:
 
