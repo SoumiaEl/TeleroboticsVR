@@ -21,6 +21,15 @@ Telepresence, especially through the use of Virtual Reality (VR) and Augmented R
 
 This repo will offer solutions to the latency issue by introducing a ROS-Unity simulation of a real teleoperation scenario. The objective is to explore new perspectives, evaluate potential methods, and acquaint oneself with emerging technologies that could potentially improve the quality of VR/AR telepresence.
 
+---
+## Installations
+
+To achieve the seamless integration of Virtual Reality (VR) or Augmented Reality (AR) with remote robot control, a connection between Unity and the Robot Operating System (ROS) will be set up. This section will guide you through the essential steps to establish a reliable ROS-Unity link by using Unity Robotics Hub packages. The remote robot control used in this project is the Franka Emika Panda. 
+
+### [Step 1](Tutorials/Step1.md)
+
+
+
 
 
 
