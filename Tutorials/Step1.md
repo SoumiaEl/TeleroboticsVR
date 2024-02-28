@@ -12,8 +12,8 @@ First, you need to add the ROS TCP Connector package to Unity by following the i
 
 Once the ROS TCP Connector package is installed in Unity, you also need to configure your ROS environment. Start by cloning the repository from the following URL:
 
-```
-https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git
+```bash
+git clone https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git
 ```
 
 **Important:** Ensure that the version of the Unity package matches exactly with the ROS package version. Otherwise, the integration will not work.
